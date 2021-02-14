@@ -3,11 +3,15 @@ package blockchain
 import (
 	"blockchain/wallet"
 	"bytes"
+	"encoding/gob"
 )
 
 type TxOutput struct {
 	Value      int
 	PubKeyHash []byte
+}
+type TxOutputs struct {
+	Outputs []TxOutput
 }
 type TxInput struct {
 	ID        []byte
@@ -34,4 +38,23 @@ func (out *TxOutput) Lock(address []byte) {
 }
 func (out *TxOutput) IsLockedWithKey(pubKeyHash []byte) bool {
 	return bytes.Compare(out.PubKeyHash, pubKeyHash) == 0
+}
+func (outs TxOutputs) Serialize() []byte {
+	var buffer bytes.Buffer
+
+	encode := gob.NewEncoder(&buffer)
+	err := encode.Encode(outs)
+	Handle(err)
+
+	return buffer.Bytes()
+}
+
+func DeserializeOutputs(data []byte) TxOutputs {
+	var outputs TxOutputs
+
+	decode := gob.NewDecoder(bytes.NewReader(data))
+	err := decode.Decode(&outputs)
+	Handle(err)
+
+	return outputs
 }
